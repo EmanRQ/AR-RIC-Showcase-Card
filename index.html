@@ -27,7 +27,7 @@
         left: 0;
         width: 100vw;
         height: 100vh;
-        background: linear-gradient(180deg, #050515 0%, #111452 50%, #33533cd 100%);
+        background: linear-gradient(180deg, #000000 0%, #6e00fd 100%);
         display: flex;
         flex-direction: column;
         justify-content: center;
@@ -37,20 +37,21 @@
         color: #ffffff;
       }
 
-      /* Logo Lebih Besar */
-      #splash-screen img {
-        width: 280px; /* Dibesarkan dari 220px */
-        max-width: 80vw;
+      /* Pengaturan Ukuran & Animasi untuk Object SVG */
+      #splash-screen object {
+        width: 190px; 
+        max-width: 60vw;
         height: auto;
-        margin-bottom: 30px;
+        margin-bottom: 25px;
+        pointer-events: none; /* Mencegah klik tidak sengaja pada elemen SVG */
         animation: pulse 2s infinite ease-in-out;
       }
 
       #splash-screen .loading-text {
-        font-size: 16px;
+        font-size: 50px;
         color: #cbd5e1;
         letter-spacing: 1.5px;
-        font-weight: 500;
+        font-weight: bold;
       }
 
       @keyframes pulse {
@@ -68,7 +69,8 @@
 
     <!-- Custom Splash Screen UI -->
     <div id="splash-screen">
-      <img src="ric-logo.svg" alt="RIC Logo" />
+      <!-- Menggunakan <object> agar internal CSS/SMIL animation pada SVG dapat berjalan -->
+      <img src="ric-logo.gif" alt="RIC Logo" />
       <div class="loading-text">Preparing AR Experience...</div>
     </div>
 
@@ -87,14 +89,13 @@
       <a-camera position="0 0 0" look-controls="enabled: false"></a-camera>
 
       <a-entity mindar-image-target="targetIndex: 0" id="target-entity">
-        <!-- Modul Animasi Ditetapkan Khas Untuk Loop Selamanya -->
         <a-gltf-model 
           id="ar-model"
           src="#showcaseModel" 
           position="0 0 0" 
           scale="0.5 0.5 0.5" 
           rotation="0 0 0" 
-          animation-mixer="loop: repeat; timeScale: 1;">
+          animation-mixer="clip: *; loop: repeat; timeScale: 1;">
         </a-gltf-model>
       </a-entity>
       
@@ -107,7 +108,7 @@
         const targetEntity = document.getElementById("target-entity");
         const modelEl = document.getElementById("ar-model");
 
-        // Tutup Splash Screen bila AR bersedia
+        // Tutup Splash Screen ketika AR siap
         sceneEl.addEventListener("arReady", () => {
           setTimeout(() => {
             splashEl.style.opacity = "0";
@@ -115,9 +116,9 @@
           }, 600);
         });
 
-        // Memastikan animasi main/loop bila kad dikesan
+        // Memastikan animasi model 3D diputar/loop saat target terdeteksi
         targetEntity.addEventListener("targetFound", () => {
-          modelEl.setAttribute("animation-mixer", "timeScale: 1; loop: repeat;");
+          modelEl.setAttribute("animation-mixer", "clip: *; timeScale: 1; loop: repeat;");
         });
       });
     </script>
