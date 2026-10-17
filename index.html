@@ -9,37 +9,91 @@
     
     <!-- MindAR A-Frame Integration Library -->
     <script src="https://cdn.jsdelivr.net/npm/mind-ar@1.2.5/dist/mindar-image-aframe.prod.js"></script>
-    
-    <!-- ✅ TAMBAH INI: A-Frame Extras (diperlukan untuk animation-mixer) -->
+
+    <!-- A-Frame Extras (Untuk Animasi) -->
     <script src="https://cdn.jsdelivr.net/gh/donmccurdy/aframe-extras@v6.1.1/dist/aframe-extras.min.js"></script>
     
     <style>
       body {
         margin: 0;
         overflow: hidden;
+        font-family: Arial, sans-serif;
+      }
+
+      /* Custom Splash Screen Overlay */
+      #splash-screen {
+  	position: fixed;
+  	top: 0;
+  	left: 0;
+  	width: 100vw;
+  	height: 100vh;
+  	/* Gradient gelap di atas ke biru di bawah */
+  	background: linear-gradient(180deg, #050515 0%, #111452 45%, #282da8 100%);
+  	display: flex;
+  	flex-direction: column;
+  	justify-content: center;
+  	align-items: center;
+  	z-index: 99999;
+  	transition: opacity 0.8s ease, visibility 0.8s ease;
+  	color: #ffffff;
+      }
+
+      #splash-screen img {
+        width: 140px; /* Laraskan saiz logo di sini */
+        height: auto;
+        margin-bottom: 20px;
+        animation: pulse 2s infinite ease-in-out;
+      }
+
+      #splash-screen h2 {
+        margin: 0 0 10px 0;
+        font-size: 20px;
+        letter-spacing: 1px;
+      }
+
+      #splash-screen p {
+        margin: 0;
+        font-size: 14px;
+        color: #94a3b8;
+      }
+
+      /* Animasi Pulse Ringkas pada Logo */
+      @keyframes pulse {
+        0% { transform: scale(1); }
+        50% { transform: scale(1.05); }
+        100% { transform: scale(1); }
+      }
+
+      /* Sembunyikan UI Loading Default MindAR */
+      .mindar-ui-loading {
+        display: none !important;
       }
     </style>
   </head>
   <body>
+
+    <!-- Custom Splash Screen UI -->
+    <div id="splash-screen">
+      <!-- Gantikan ric-logo.png dengan nama fail logo RIC anda -->
+      <img src="ric-logo.svg" alt="RIC Logo" />
+      <div class="loading-text">Preparing AR Experience...</div>
+    </div>
+
     <!-- AR Scene Container -->
     <a-scene 
-      mindar-image="imageTargetSrc: target.mind;" 
+      mindar-image="imageTargetSrc: target.mind; uiLoading: no;" 
       color-space="sRGB" 
       renderer="colorManagement: true, physicallyCorrectLights" 
       vr-mode-ui="enabled: false" 
       device-orientation-permission-ui="enabled: false">
       
       <a-assets>
-        <!-- Load your 3D animated GLB model -->
         <a-asset-item id="showcaseModel" src="model.glb"></a-asset-item>
       </a-assets>
 
-      <!-- Camera configuration for AR tracking -->
       <a-camera position="0 0 0" look-controls="enabled: false"></a-camera>
 
-      <!-- Target Anchor (index: 0 maps to your first compiled target.mind image) -->
       <a-entity mindar-image-target="targetIndex: 0">
-        <!-- 3D Model: Adjust position, scale, and rotation to fit your physical card layout -->
         <a-gltf-model 
           src="#showcaseModel" 
           position="0 0 0" 
@@ -50,5 +104,20 @@
       </a-entity>
       
     </a-scene>
+
+    <script>
+      // Sembunyikan splash screen apabila sistem MindAR sedia
+      document.addEventListener("DOMContentLoaded", () => {
+        const sceneEl = document.querySelector("a-scene");
+        const splashEl = document.getElementById("splash-screen");
+
+        sceneEl.addEventListener("arReady", () => {
+          setTimeout(() => {
+            splashEl.style.opacity = "0";
+            splashEl.style.visibility = "hidden";
+          }, 500); // Penangguhan kecil untuk peralihan halus
+        });
+      });
+    </script>
   </body>
 </html>
