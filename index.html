@@ -38,17 +38,19 @@
       }
 
       /* Pengaturan Ukuran & Animasi untuk Object SVG */
-      #splash-screen object {
-        width: 190px; 
-        max-width: 60vw;
-        height: auto;
+      #splash-screen img {
+        /* Naikkan saiz kepada nilai yang lebih seimbang untuk desktop & telefon */
+        width: 300px !important; 
+        max-width: 100vw !important;
+        height: auto !important;
+        object-fit: contain;
         margin-bottom: 25px;
-        pointer-events: none; /* Mencegah klik tidak sengaja pada elemen SVG */
+        pointer-events: none;
         animation: pulse 2s infinite ease-in-out;
       }
 
       #splash-screen .loading-text {
-        font-size: 50px;
+        font-size: 16px;
         color: #cbd5e1;
         letter-spacing: 1.5px;
         font-weight: bold;
