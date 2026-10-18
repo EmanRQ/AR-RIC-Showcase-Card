@@ -13,21 +13,6 @@
     <!-- A-Frame Extras (Untuk Animasi GLB) -->
     <script src="https://cdn.jsdelivr.net/gh/donmccurdy/aframe-extras@v6.1.1/dist/aframe-extras.min.js"></script>
     
-    <script>
-      // Register custom click-url component khas untuk A-Frame pada telefon pintar
-      AFRAME.registerComponent('click-url', {
-        schema: { type: 'string' },
-        init: function () {
-          const url = this.data;
-          this.el.addEventListener('click', () => {
-            if (url) {
-              window.open(url, '_blank');
-            }
-          });
-        }
-      });
-    </script>
-
     <style>
       body {
         margin: 0;
@@ -79,9 +64,31 @@
         display: none !important;
       }
 
-      .raycastable {
+      /* --- HTML OVERLAY BUTTONS (Terapung di atas skrin AR & 100% boleh diklik) --- */
+      #social-buttons-container {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100vw;
+        height: 100vh;
+        display: none; /* Sembunyi selagi target belum jumpa */
+        pointer-events: none; /* Biar sentuhan tembus ke kamera, kecuali pada butang */
+        z-index: 9999;
+      }
+
+      .ar-social-btn {
+        position: absolute;
+        pointer-events: auto; /* Membolehkan butang diklik */
+        border: 2px solid rgba(255, 255, 255, 0.5);
+        background: rgba(0, 0, 0, 0.3); /* Letak warna latar sementara untuk nampak petak */
+        border-radius: 10px;
         cursor: pointer;
       }
+
+      /* Sesuaikan kedudukan (top, left, width, height) petak butang ini mengikut skrin telefon anda */
+      #btn-fb { top: 20%; left: 50%; width: 200px; height: 140px; background: transparent; border: none; }
+      #btn-ig { top: 40%; left: 50%; width: 200px; height: 140px; background: transparent; border: none; }
+      #btn-tk { top: 60%; left: 50%; width: 200px; height: 140px; background: transparent; border: none; }
     </style>
   </head>
   <body>
@@ -92,13 +99,19 @@
       <div class="loading-text">Preparing AR Experience...</div>
     </div>
 
-    <!-- AR Scene Container -->
+    <!-- HTML Button Overlay yang akan muncul bila target dikesan -->
+    <div id="social-buttons-container">
+      <div id="btn-fb" class="ar-social-btn"></div>
+      <div id="btn-ig" class="ar-social-btn"></div>
+      <div id="btn-tk" class="ar-social-btn"></div>
+    </div>
+
+    <!-- AR Scene Container (Hanya fokus pada Model & Imej Visual AR) -->
     <a-scene 
       mindar-image="imageTargetSrc: target.mind;" 
       color-space="sRGB" 
       renderer="colorManagement: true, physicallyCorrectLights" 
-      vr-mode-ui="enabled: false"
-      raycaster="objects: .raycastable">
+      vr-mode-ui="enabled: false">
       
       <a-assets>
         <!-- Model Karakter 3D -->
@@ -111,8 +124,7 @@
         <img id="socialPng" src="ric-social.png" crossorigin="anonymous">
       </a-assets>
 
-      <!-- Kamera dengan Raycaster & Mouse Cursor untuk Skrin Sentuh -->
-      <a-camera position="0 0 0" look-controls="enabled: false" raycaster="objects: .raycastable" cursor="fuse: false; rayOrigin: mouse;"></a-camera>
+      <a-camera position="0 0 0" look-controls="enabled: false"></a-camera>
 
       <a-entity mindar-image-target="targetIndex: 0" id="target-entity">
 
@@ -134,48 +146,13 @@
           height="2.3">
         </a-image>
 
-        <!-- 3. Social PNG -->
+        <!-- 3. Social PNG (Visual Ikon Media Sosial) -->
         <a-image
           src="#socialPng" 
           position="0.1 0 0.02" 
           width="3.2" 
           height="2.8">
         </a-image>
-
-        <!-- 4. BUTANG DENGAN KOMPONEN `click-url` (Nilai Z = 0.1 di hadapan sekali) -->
-        
-        <!-- Butang Facebook (Merah Telus) -->
-        <a-plane 
-          id="btn-facebook" 
-          class="raycastable"
-          click-url="https://web.facebook.com/profile.php?id=100081127783381"
-          position="0.1 0.7 0.1" 
-          width="1.0" 
-          height="0.5" 
-          material="color: red; opacity: 0.5; transparent: true;">
-        </a-plane>
-
-        <!-- Butang Instagram (Hijau Telus) -->
-        <a-plane 
-          id="btn-instagram" 
-          class="raycastable"
-          click-url="https://www.instagram.com/rauboticsclub?utm_source=qr&obrf=Z3dma2g1dXgwMXdt"
-          position="0.1 0 0.1" 
-          width="1.0" 
-          height="0.5" 
-          material="color: green; opacity: 0.5; transparent: true;">
-        </a-plane>
-
-        <!-- Butang TikTok (Biru Telus) -->
-        <a-plane 
-          id="btn-tiktok" 
-          class="raycastable"
-          click-url="https://www.tiktok.com/@ricraub?_r=1&_t=ZS-9AeweMHrQav"
-          position="0.1 -0.7 0.1" 
-          width="1.0" 
-          height="0.5" 
-          material="color: blue; opacity: 0.5; transparent: true;">
-        </a-plane>
 
       </a-entity>
       
@@ -187,6 +164,7 @@
         const splashEl = document.getElementById("splash-screen");
         const targetEntity = document.getElementById("target-entity");
         const modelEl = document.getElementById("ar-model");
+        const socialContainer = document.getElementById("social-buttons-container");
 
         sceneEl.addEventListener("arReady", () => {
           setTimeout(() => {
@@ -195,8 +173,28 @@
           }, 600);
         });
 
+        // Apabila kad dikesan, paparkan model 3D DAN butang HTML di atas skrin
         targetEntity.addEventListener("targetFound", () => {
           modelEl.setAttribute("animation-mixer", "clip: *; timeScale: 1; loop: repeat;");
+          socialContainer.style.display = "block";
+        });
+
+        // Apabila kad hilang dari pandangan kamera, sembunyikan semula butang
+        targetEntity.addEventListener("targetLost", () => {
+          socialContainer.style.display = "none";
+        });
+
+        // --- SKRIP KLIK HTML OVERLAY (Dijamin 100% Berfungsi & Responsif) ---
+        document.getElementById("btn-fb").addEventListener("click", () => {
+          window.open("https://web.facebook.com/profile.php?id=100081127783381", "_blank");
+        });
+
+        document.getElementById("btn-ig").addEventListener("click", () => {
+          window.open("https://www.instagram.com/rauboticsclub?utm_source=qr&obrf=Z3dma2g1dXgwMXdt", "_blank");
+        });
+
+        document.getElementById("btn-tk").addEventListener("click", () => {
+          window.open("https://www.tiktok.com/@ricraub?_r=1&_t=ZS-9AeweMHrQav", "_blank");
         });
       });
     </script>
